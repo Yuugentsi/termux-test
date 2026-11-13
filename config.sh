@@ -77,7 +77,7 @@ mb_text() {
 }
 
 run() {
-    local label="$1" log_file pid frame=0 result=0 detail width rendered content raw latest="" suffix
+    local label="$1" log_file pid frame=0 result=0 detail width rendered content raw latest="" suffix started=$SECONDS
     local dl_total dl_done need_unit need_num
     local rows cols
     read -r rows cols < <(stty size 2>/dev/null) || true
@@ -122,8 +122,8 @@ run() {
             elif ((dl_done > 0)); then
                 printf '\r\033[K  %s%s%s %s⇣ %s MB%s | %.*s' "$ACCENT" "${frames[frame % 10]}" "$RESET" "$DIM" "$(mb_text "$dl_done")" "$RESET" "$((width - 26))" "$detail"
             else
-                rendered=$(render_status "$detail" "${frames[frame % 10]}" "$width")
-                printf '\r\033[K%s' "$rendered"
+                rendered=$(render_status "$detail" "${frames[frame % 10]}" "$((width - 10))")
+                printf '\r\033[K%s %s%ss%s' "$rendered" "$DIM" "$((SECONDS - started))" "$RESET"
             fi
             frame=$((frame + 1))
             sleep 0.08 2>/dev/null || true
@@ -411,8 +411,11 @@ case "$choice" in
         ;;
     6)
         run "Updating package index" pkg update -y
-        for app in yt-dlp aria2 gallery-dl; do
-            run "Installing $app" install_downloader "$app"
+        local -a tools=(yt-dlp aria2 gallery-dl)
+        local index=0
+        for app in "${tools[@]}"; do
+            index=$((index + 1))
+            run "Installing $app · $index/${#tools[@]}" install_downloader "$app"
         done
         ;;
 
