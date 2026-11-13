@@ -135,6 +135,12 @@ header() {
     printf '\n  %s%s◈  termux%s  %s/  %s%s\n\n' "$BOLD" "$ACCENT" "$RESET" "$DIM" "$1" "$RESET"
 }
 
+system_update() {
+    run "Selecting fastest mirror" select_mirror
+    run "Updating package index" pkg update -y
+    run "Upgrading packages" pkg upgrade -y
+}
+
 select_mirror() {
     local probe_dir arch mirror i pid result best speed bytes
     local -a pids=() mirrors=(
@@ -325,17 +331,13 @@ case "$choice" in
             step "Grant storage access in the Android prompt"
             run "Storage access requested" termux-setup-storage
         fi
-        run "Selecting fastest mirror" select_mirror
-        run "Updating package index" pkg update -y
-        run "Upgrading packages" pkg upgrade -y
+        system_update
         install_apps "${PACKAGES[@]}"
         run "Setting Fish as default shell" chsh -s fish
         run "Applying configuration" apply_config
         ;;
     2)
-        run "Selecting fastest mirror" select_mirror
-        run "Updating package index" pkg update -y
-        run "Upgrading packages" pkg upgrade -y
+        system_update
         ;;
     3)
         if ! command -v git >/dev/null 2>&1; then
@@ -344,15 +346,14 @@ case "$choice" in
         run "Applying configuration" apply_config
         ;;
     4)
-        run "Selecting fastest mirror" select_mirror
-        run "Updating package index" pkg update -y
-        run "Upgrading packages" pkg upgrade -y
+        system_update
         install_apps "${selected[@]}"
         ;;
     5)
         run "Installing Fish" pkg install -y fish
         run "Setting Fish as default shell" chsh -s fish
-        ;;    6)
+        ;;
+    6)
         run "Updating package index" pkg update -y
         for app in yt-dlp aria2 gallery-dl; do
             run "Installing $app" install_downloader "$app"
