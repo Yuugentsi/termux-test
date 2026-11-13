@@ -144,7 +144,7 @@ finish() {
         printf '  %s📜 ~/termux-setup.log%s\n\n' "$DIM" "$RESET" >&2
         return 1
     fi
-    printf '  %s◈ done ✓%s\n\n' "$GREEN" "$RESET"
+    printf '  %s✓%s\n\n' "$GREEN" "$RESET"
 }
 
 header() {
