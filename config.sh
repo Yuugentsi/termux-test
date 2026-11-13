@@ -58,7 +58,7 @@ render_status() {
 }
 
 run() {
-    local label="$1" log_file pid frame=0 result=0 detail width rendered chunk raw latest="" offset=0
+    local label="$1" log_file pid frame=0 result=0 detail width rendered content raw latest=""
     width=${COLUMNS:-80}
     [[ "$width" =~ ^[0-9]+$ ]] || width=80
     ((width > 8)) || width=80
@@ -77,15 +77,14 @@ run() {
     if "$ANIMATED"; then
         printf '\033[?25l'
         while kill -0 "$pid" 2>/dev/null; do
-            chunk=$(tail -c +$((offset + 1)) "$log_file" 2>/dev/null || true)
-            offset=$((offset + $(printf '%s' "$chunk" | LC_ALL=C wc -c)))
-            while IFS= read -r raw || [[ -n "$raw" ]]; do
-                raw="${raw//$'\r'/}"
+            content=$(<"$log_file")
+            content="${content//$'\r'/$'\n'}"
+            while IFS= read -r raw; do
                 case "$raw" in
                     ""|*[Nn]o\ change*|*[Tt]here\ is\ nothing\ to\ do*) ;;
                     *) latest="$raw" ;;
                 esac
-            done <<< "$chunk"
+            done <<< "$content"
             detail="${latest:-$label}"
             rendered=$(render_status "$detail" "${frames[frame % 10]}" "$width")
             printf '\r%s\033[K\n\033[K  %s%s%s\033[K\033[1A\r' "$rendered" "$DIM" "${latest:0:$((width - 4))}" "$RESET"
