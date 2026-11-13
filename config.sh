@@ -111,6 +111,7 @@ run() {
             printf '%s\n' "$line" >&2
         done < "$log_file"
     fi
+    printf '\n== %s ==\n%s\n' "$label" "$(<"$log_file")" >> "$HOME/termux-setup.log" 2>/dev/null || true
     rm -f "$log_file" 2>/dev/null || true
     return 0
 }
