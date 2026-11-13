@@ -411,8 +411,8 @@ case "$choice" in
         ;;
     6)
         run "Updating package index" pkg update -y
-        local -a tools=(yt-dlp aria2 gallery-dl)
-        local index=0
+        tools=(yt-dlp aria2 gallery-dl)
+        index=0
         for app in "${tools[@]}"; do
             index=$((index + 1))
             run "Installing $app · $index/${#tools[@]}" install_downloader "$app"
