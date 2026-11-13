@@ -59,9 +59,11 @@ render_status() {
 
 run() {
     local label="$1" log_file pid frame=0 result=0 detail width rendered content raw latest=""
-    width=${COLUMNS:-80}
-    [[ "$width" =~ ^[0-9]+$ ]] || width=80
-    ((width > 8)) || width=80
+    local rows cols
+    read -r rows cols < <(stty size 2>/dev/null) || true
+    width=${cols:-${COLUMNS:-80}}
+    [[ "$width" =~ ^[0-9]+$ ]] && ((width > 8)) || width=80
+    ((width -= 1))
     local -a frames=(⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏)
     shift
     log_file=$(mktemp)
