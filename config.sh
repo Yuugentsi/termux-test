@@ -95,7 +95,7 @@ run() {
             done
             detail="${latest:-$label}"
             rendered=$(render_status "$detail" "${frames[frame % 10]}" "$width")
-            printf '\r%s\033[K' "$rendered"
+            printf '\r%s\033[K\n\033[K  %s%s%s\033[K\033[1A\r' "$rendered" "$DIM" "${latest:0:$((width - 4))}" "$RESET"
             frame=$((frame + 1))
             sleep 0.08 2>/dev/null || true
         done
@@ -103,7 +103,7 @@ run() {
     exec {log_fd}<&-
     wait "$pid" || result=$?
     if "$ANIMATED"; then
-        printf '\r\033[?25h'
+        printf '\r\033[K\n\033[K\033[1A\r\033[?25h'
     fi
     if ((result == 0)); then
         printf '  %s✓%s %s' "$GREEN" "$RESET" "$label"
