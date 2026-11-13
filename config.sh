@@ -58,7 +58,7 @@ render_status() {
 }
 
 run() {
-    local label="$1" log_file pid frame=0 result=0 detail width rendered log_fd char line="" latest="" count
+    local label="$1" log_file pid frame=0 result=0 detail width rendered chunk raw latest="" offset=0
     width=${COLUMNS:-80}
     [[ "$width" =~ ^[0-9]+$ ]] || width=80
     ((width > 8)) || width=80
@@ -67,32 +67,25 @@ run() {
     log_file=$(mktemp)
     (
         set -euo pipefail
-        "$@"
+        if [[ "$(type -t "$1")" == file ]] && command -v stdbuf >/dev/null 2>&1; then
+            stdbuf -oL -eL "$@"
+        else
+            "$@"
+        fi
     ) >"$log_file" 2>&1 &
     pid=$!
-    exec {log_fd}<"$log_file"
     if "$ANIMATED"; then
         printf '\033[?25l'
         while kill -0 "$pid" 2>/dev/null; do
-            count=0
-            while ((count < 4096)) && IFS= read -r -N 1 -t 0.001 -u "$log_fd" char; do
-                count=$((count + 1))
-                case "$char" in
-                    $'\n'|$'\r')
-                        case "$line" in
-                            ""|*[Nn]o\ change*|*[Tt]here\ is\ nothing\ to\ do*) ;;
-                            *) latest="$line" ;;
-                        esac
-                        line=""
-                        ;;
-                    *)
-                        if [[ "$char" != [[:cntrl:]] ]]; then
-                            line+="$char"
-                            line="${line: -512}"
-                        fi
-                        ;;
+            chunk=$(tail -c +$((offset + 1)) "$log_file" 2>/dev/null || true)
+            offset=$((offset + $(printf '%s' "$chunk" | LC_ALL=C wc -c)))
+            while IFS= read -r raw || [[ -n "$raw" ]]; do
+                raw="${raw//$'\r'/}"
+                case "$raw" in
+                    ""|*[Nn]o\ change*|*[Tt]here\ is\ nothing\ to\ do*) ;;
+                    *) latest="$raw" ;;
                 esac
-            done
+            done <<< "$chunk"
             detail="${latest:-$label}"
             rendered=$(render_status "$detail" "${frames[frame % 10]}" "$width")
             printf '\r%s\033[K\n\033[K  %s%s%s\033[K\033[1A\r' "$rendered" "$DIM" "${latest:0:$((width - 4))}" "$RESET"
@@ -100,7 +93,6 @@ run() {
             sleep 0.08 2>/dev/null || true
         done
     fi
-    exec {log_fd}<&-
     wait "$pid" || result=$?
     if "$ANIMATED"; then
         printf '\r\033[K\n\033[K\033[1A\r\033[?25h'
