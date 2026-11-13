@@ -108,6 +108,8 @@ run() {
                     dl_total=$(size_kb "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}")
                 elif [[ "$raw" =~ ^Get:[0-9]+\ .*\[([0-9.]+)\ (kB|MB|B)\]$ ]]; then
                     dl_done=$((dl_done + $(size_kb "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}")))
+                elif [[ "$raw" =~ ^Downloading\ .*\(([0-9.]+)\ (kB|MB|B)\)$ ]]; then
+                    dl_done=$((dl_done + $(size_kb "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}")))
                 fi
                 case "$raw" in
                     ""|*[Nn]o\ change*|*[Tt]here\ is\ nothing\ to\ do*) ;;
@@ -117,6 +119,8 @@ run() {
             detail="${latest:-$label}"
             if ((dl_total > 0)); then
                 printf '\r\033[K  %s%s%s %s⇣ %s/%s MB%s | %.*s' "$ACCENT" "${frames[frame % 10]}" "$RESET" "$DIM" "$(mb_text "$dl_done")" "$(mb_text "$dl_total")" "$RESET" "$((width - 30))" "$detail"
+            elif ((dl_done > 0)); then
+                printf '\r\033[K  %s%s%s %s⇣ %s MB%s | %.*s' "$ACCENT" "${frames[frame % 10]}" "$RESET" "$DIM" "$(mb_text "$dl_done")" "$RESET" "$((width - 26))" "$detail"
             else
                 rendered=$(render_status "$detail" "${frames[frame % 10]}" "$width")
                 printf '\r\033[K%s' "$rendered"
