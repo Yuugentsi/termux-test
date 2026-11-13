@@ -120,11 +120,10 @@ run() {
 
 finish() {
     local rule item
-    printf -v rule '%*s' 44 ''
-    rule="${rule// /─}"
+    printf -v rule '%*s' 36 ''
+    rule="${rule// /━}"
     if "$ANIMATED"; then printf '\033[2J\033[H'; fi
-    header "summary"
-    printf '  %s%s%s\n' "$DIM" "$rule" "$RESET"
+    printf '\n  %s%s%s\n' "$DIM" "$rule" "$RESET"
     local -a packages=()
     for item in "${COMPLETED_STEPS[@]}"; do
         if [[ "$item" =~ ^Installing\ ([^\ ]+)\ · ]]; then
@@ -134,19 +133,18 @@ finish() {
         fi
     done
     if ((${#packages[@]})); then
-        printf '  %s✓%s %s packages: %s\n' "$GREEN" "$RESET" "${#packages[@]}" "${packages[*]}"
+        printf '  %s✓%s %s  %s%s%s\n' "$GREEN" "$RESET" "${#packages[@]}" "$DIM" "${packages[*]}" "$RESET"
     fi
-    printf '  %s%s%s\n\n' "$DIM" "$rule" "$RESET"
+    printf '  %s%s%s\n' "$DIM" "$rule" "$RESET"
     if ((${#FAILED_STEPS[@]})); then
-        printf '  %s✗ %s step(s) failed:%s\n' "$RED" "${#FAILED_STEPS[@]}" "$RESET" >&2
+        printf '  %s✗ %s failed%s\n' "$RED" "${#FAILED_STEPS[@]}" "$RESET" >&2
         for item in "${FAILED_STEPS[@]}"; do
-            printf '    %s✗%s %s\n' "$RED" "$RESET" "$item" >&2
+            printf '  %s✗%s %s\n' "$RED" "$RESET" "$item" >&2
         done
-        printf '\n  %sLog:%s ~/termux-setup.log\n\n' "$DIM" "$RESET" >&2
+        printf '  %s📜 ~/termux-setup.log%s\n\n' "$DIM" "$RESET" >&2
         return 1
     fi
-    printf '  %s✓ Setup complete%s\n' "$GREEN" "$RESET"
-    printf '  %sRestart Termux to load fish.%s\n\n' "$DIM" "$RESET"
+    printf '  %s◈ done ✓%s\n\n' "$GREEN" "$RESET"
 }
 
 header() {
