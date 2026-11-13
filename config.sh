@@ -58,8 +58,27 @@ render_status() {
     fi
 }
 
+size_kb() {
+    local num="$1" unit="$2" int frac
+    int="${num%%.*}"
+    frac=0
+    [[ "$num" == *.* ]] && frac="${num#*.}" && frac="${frac:0:1}"
+    frac="${frac:-0}"
+    case "$unit" in
+        B) echo $((int / 1024)) ;;
+        kB) echo $(((int * 10 + frac) / 10)) ;;
+        MB) echo $(((int * 10 + frac) * 1024 / 10)) ;;
+        GB) echo $(((int * 10 + frac) * 1024 * 1024 / 10)) ;;
+    esac
+}
+
+mb_text() {
+    printf '%d.%d' $(($1 / 1024)) $(((($1 * 10) / 1024) % 10))
+}
+
 run() {
-    local label="$1" log_file pid frame=0 result=0 detail width rendered content raw latest=""
+    local label="$1" log_file pid frame=0 result=0 detail width rendered content raw latest="" suffix
+    local dl_total dl_done need_unit need_num
     local rows cols
     read -r rows cols < <(stty size 2>/dev/null) || true
     width=${cols:-${COLUMNS:-80}}
@@ -82,15 +101,26 @@ run() {
         while kill -0 "$pid" 2>/dev/null; do
             content=$(<"$log_file")
             content="${content//$'\r'/$'\n'}"
+            dl_total=0
+            dl_done=0
             while IFS= read -r raw; do
+                if [[ "$raw" =~ ^Need\ to\ get\ ([0-9.]+)\ (kB|MB|GB)\ of ]]; then
+                    dl_total=$(size_kb "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}")
+                elif [[ "$raw" =~ ^Get:[0-9]+\ .*\[([0-9.]+)\ (kB|MB|B)\]$ ]]; then
+                    dl_done=$((dl_done + $(size_kb "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}")))
+                fi
                 case "$raw" in
                     ""|*[Nn]o\ change*|*[Tt]here\ is\ nothing\ to\ do*) ;;
                     *) latest="$raw" ;;
                 esac
             done <<< "$content"
+            suffix=""
+            if ((dl_total > 0)); then
+                suffix="  ⇣ $(mb_text "$dl_done")/$(mb_text "$dl_total") MB"
+            fi
             detail="${latest:-$label}"
-            rendered=$(render_status "$detail" "${frames[frame % 10]}" "$width")
-            printf '\r\033[K%s' "$rendered"
+            rendered=$(render_status "$detail" "${frames[frame % 10]}" "$((width - ${#suffix}))")
+            printf '\r\033[K%s%s%s%s' "$rendered" "$DIM" "$suffix" "$RESET"
             frame=$((frame + 1))
             sleep 0.08 2>/dev/null || true
         done
