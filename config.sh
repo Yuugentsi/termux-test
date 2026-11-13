@@ -214,9 +214,10 @@ apply_config() {
 }
 
 install_apps() {
-    local package
+    local package index=0 total=$#
     for package in "$@"; do
-        run "Installing $package" pkg install -y "$package"
+        index=$((index + 1))
+        run "Installing $package · $index/$total" pkg install -y "$package"
     done
 }
 
@@ -237,16 +238,21 @@ install_downloader() {
     esac
 }
 
+simulate_package() {
+    local package="$1" index="$2" total="$3" percent
+    for percent in 15 45 75 100; do
+        printf 'Downloading %s · %s/%s · %s%%\n' "$package" "$index" "$total" "$percent"
+        sleep 0.08
+    done
+    printf 'Installing %s · %s/%s · 100%%\n' "$package" "$index" "$total"
+    sleep 0.12
+}
+
 simulate_apps() {
-    local package percent index=0 total=${#PACKAGES[@]}
+    local package index=0 total=${#PACKAGES[@]}
     for package in "${PACKAGES[@]}"; do
         index=$((index + 1))
-        for percent in 15 45 75 100; do
-            printf 'Downloading %s · %s/%s · %s%%\n' "$package" "$index" "$total" "$percent"
-            sleep 0.08
-        done
-        printf 'Installing %s · %s/%s · 100%%\n' "$package" "$index" "$total"
-        sleep 0.12
+        run "Installing $package · $index/$total" simulate_package "$package" "$index" "$total"
     done
 }
 
@@ -254,7 +260,7 @@ preview() {
     header "preview · simulation"
     run "Fastest mirror selected" sleep 0.5
     run "Package index updated" sleep 0.5
-    run "Apps installed" simulate_apps
+    simulate_apps
     run "Fish configured" sleep 0.5
     run "Configuration applied" sleep 0.5
     printf '\n  %s✓%s Preview complete.\n\n' "$GREEN" "$RESET"
