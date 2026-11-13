@@ -1,49 +1,35 @@
-# ── shell ───────────────────────────────────────────────────
 set -g fish_greeting
 
 cd /storage/emulated/0/
 abbr -a sd /storage/emulated/0
 abbr -a termux /storage/emulated/0/termux
 
-# ── functions ───────────────────────────────────────────────
 for f in ~/.config/fish/functions/*.fish
     source $f
 end
 
 alias rish='RISH_APPLICATION_ID=com.termux sh "$HOME/rish"'
-#
 alias securityoff='pm uninstall -k --user 0 com.miui.securitycenter'
 alias securityon='cmd package install-existing --user 0 com.miui.securitycenter && pm enable --user 0 com.miui.securitycenter'
-# ── clear ───────────────────────────────────────────────────
 abbr -a c clear
 
-# ── mkcd ────────────────────────────────────────────────────
 function mkcd; mkdir -p $argv[1]; and cd $argv[1]; end
 
-# ── rd ──────────────────────────────────────────────────────
-#function gh; git clone $argv[1]; and cd (basename (string replace -r '\.git$' '' $argv[1])); end
 function rd; clear; set -l p (pwd); cd ..; read -l -P "󰅙 rm -rf $p ? [y/N] " confirm; test "$confirm" = y; and rm -rf $p; and clear; and echo "󰄬 deleted $p"; end
 
-# ── empty ───────────────────────────────────────────────────
 function empty; set -l n (find (pwd) -type d -empty 2>/dev/null | wc -l); find (pwd) -type d -empty -delete 2>/dev/null; echo "$n folders deleted"; end
 
-# ── zipast ──────────────────────────────────────────────────
 function zipast; zip -r (basename $PWD).zip . > /dev/null; clear; du -h (basename $PWD).zip; end
 
-# ── dt ──────────────────────────────────────────────────────
 function dt; clear; set -l now (date '+%s'); set -l midnight (date -d 'tomorrow 00:00:00' '+%s'); set -l left (math -s0 "$midnight - $now"); set -l h (math -s0 "$left / 3600"); set -l m (math -s0 "($left % 3600) / 60"); printf "󰔚 %s - 󰑔 %s - 󰕑 %sh%sm\n" (date '+%H:%M:%S') (date '+%m/%d/%Y') $h $m; end
 
-# ── min ─────────────────────────────────────────────────────
 function min; set -l n (date +%s); set -l h (date +%H); set -l nx (math "$h + 1"); set -l nxh (date -d "$nx:00:00" +%s); set -l l (math "$nxh - $n"); set -l m (math -s0 "$l / 60"); set -l s (math -s0 "$l % 60"); clear; echo "󰔚 $m min $s sec"; end
 
-# ── volume ──────────────────────────────────────────────────
 function volume; clear; set -q argv[1]; and set p $argv[1]; or set p 100; wpctl set-volume @DEFAULT_AUDIO_SINK@ (math "min(max($p, 30), 110) / 100"); end
 
-# ── bak ─────────────────────────────────────────────────────
 function bak -d "backup dir to bak/"; set -l d (pwd); if set -q argv[1]; set d (realpath "$argv[1]"); end; mkdir -p "$d/bak"; for f in "$d"/*; test "$f" != "$d/bak"; and cp -r "$f" "$d/bak/"; end; clear; and echo "󰄬 $d/bak"; end
 
 
-# ── config ──────────────────────────────────────────────────
 function config
     set -l G (set_color green); set -l R (set_color red); set -l N (set_color normal)
 
@@ -71,8 +57,6 @@ function config
     end
 end
 
-# ── archives ────────────────────────────────────────────────
-# ── extract ─────────────────────────────────────────────────
 function extract -d "extract archives"
     set -l found 0
     for file in *.zip *.tar *.tar.gz *.tar.xz *.tar.bz2 *.tgz
@@ -101,7 +85,6 @@ function extract -d "extract archives"
     end
 end
 
-# ── zips ────────────────────────────────────────────────────
 function zips -d "zip directory"
     set -l name (basename "$PWD")
     set -l file "$name.zip"
@@ -116,7 +99,6 @@ function zips -d "zip directory"
     end
 end
 
-# ── cbz ─────────────────────────────────────────────────────
 function cbz -d "create cbz"
     set -l name (basename "$PWD")
     set -l file "$name.cbz"
@@ -131,7 +113,6 @@ function cbz -d "create cbz"
     end
 end
 
-# ── prompt ──────────────────────────────────────────────────
 set -g fish_transient_prompt 1
 
 function fish_prompt
@@ -158,7 +139,6 @@ function fish_prompt
     echo -n -s "$DIM╰─$N " (set_color $status_color --bold) "❯ " (set_color normal)
 end
 
-# ── venv ────────────────────────────────────────────────────
 function venv
     set -l green (set_color green)
     set -l red (set_color red)
@@ -179,10 +159,8 @@ function venv
     end
 end
 
-# ── venv requirements ───────────────────────────────────────
 function venvr; set -l req "$PWD/requirements.txt"; if not test -f "$req"; echo "requirements.txt not found"; return 1; end; venv; pip install -r "$req"; end
 
-# ── help ────────────────────────────────────────────────────
 function h -d "list functions"
     set -l N (set_color normal)
     set -l colors \
@@ -199,7 +177,6 @@ function h -d "list functions"
 
     set -l sections
 
-    # config.fish
     set -l cfg "$HOME/.config/fish/config.fish"
     if test -f "$cfg"
         set -l entries (grep -E "^function " "$cfg" 2>/dev/null)
@@ -220,7 +197,6 @@ function h -d "list functions"
         end
     end
 
-    # functions/*.fish
     set -l dir "$HOME/.config/fish/functions"
     set -l files
     if test -d "$dir"
@@ -313,7 +289,6 @@ function h -d "list functions"
     echo ""
 end
 
-# ── wallhaven ───────────────────────────────────────────────
 function fish_command_not_found --on-event fish_command_not_found
     if string match -qr '^https://w\.wallhaven\.cc/.*\.(jpg|png|webp)$' -- $argv[1]
         mkdir -p $PREFIX/tmp
@@ -363,7 +338,6 @@ function fish_command_not_found --on-event fish_command_not_found
 
     __fish_default_command_not_found_handler $argv
 end
-# ── youtube ─────────────────────────────────────────────────
 function __extra_cnf
     if not string match -qr '^https?://(www\.)?(youtube\.com|youtu\.be)/' -- $argv[1]; return 1; end
     if not command -v yt-dlp >/dev/null 2>&1; echo "yt-dlp not found"; return 1; end
@@ -387,13 +361,11 @@ function __extra_cnf
     clear; echo -s $G "$id 󰄬" $N
 end
 
-# ── command not found ───────────────────────────────────────
 function fish_command_not_found
     if type -q __extra_cnf; __extra_cnf $argv; and return; end
     if type -q __fish_command_not_found_handler; __fish_command_not_found_handler $argv; else; __fish_default_command_not_found_handler $argv; end
 end
 
-# ── ins ─────────────────────────────────────────────────────
 function ins --description 'packages'
     if not set -q argv[1]
         printf 'Usage: ins <package> [package ...]\n'

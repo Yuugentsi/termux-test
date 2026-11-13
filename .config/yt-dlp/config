@@ -1,23 +1,17 @@
-# ─── sponsorblock ───
 --sponsorblock-remove sponsor,selfpromo,interaction,preview,filler,intro,outro
 
-# ─── speed ───
 --concurrent-fragments 16
 --throttled-rate 100K
 
-# ─── retries ───
 --fragment-retries 10
 --ignore-errors
 --no-update
 --retries 10
 
-# ─── output ───
 --continue
-#--download-archive ~/.cache/yt-dlp/archive.txt
 --merge-output-format mp4
 --no-overwrites
 --no-playlist
 -o %(title)s.%(ext)s
-#--paths ~/media/videos/
 --windows-filenames
 

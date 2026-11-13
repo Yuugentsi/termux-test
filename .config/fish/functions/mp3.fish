@@ -1,4 +1,3 @@
-# mp3
 function mp3 --description 'MP3'
     if test (count $argv) -eq 0
         echo 'Usage: mp3 URL [URL ...]' >&2
