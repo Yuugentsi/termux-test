@@ -114,13 +114,13 @@ run() {
                     *) latest="$raw" ;;
                 esac
             done <<< "$content"
-            suffix=""
-            if ((dl_total > 0)); then
-                suffix="  ⇣ $(mb_text "$dl_done")/$(mb_text "$dl_total") MB"
-            fi
             detail="${latest:-$label}"
-            rendered=$(render_status "$detail" "${frames[frame % 10]}" "$((width - ${#suffix}))")
-            printf '\r\033[K%s%s%s%s' "$rendered" "$DIM" "$suffix" "$RESET"
+            if ((dl_total > 0)); then
+                printf '\r\033[K  %s%s%s %s⇣ %s/%s MB%s | %.*s' "$ACCENT" "${frames[frame % 10]}" "$RESET" "$DIM" "$(mb_text "$dl_done")" "$(mb_text "$dl_total")" "$RESET" "$((width - 30))" "$detail"
+            else
+                rendered=$(render_status "$detail" "${frames[frame % 10]}" "$width")
+                printf '\r\033[K%s' "$rendered"
+            fi
             frame=$((frame + 1))
             sleep 0.08 2>/dev/null || true
         done
