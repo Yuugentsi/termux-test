@@ -10,6 +10,7 @@ DIM=""
 RED=""
 RESET=""
 FAILED_STEPS=()
+COMPLETED_STEPS=()
 ANIMATED=false
 
 if [[ -t 1 && -z "${NO_COLOR+x}" && "${TERM:-dumb}" != "dumb" ]]; then
@@ -99,6 +100,7 @@ run() {
         printf '\r\033[K\033[?25h'
     fi
     if ((result == 0)); then
+        COMPLETED_STEPS+=("$label")
         printf '  %s✓%s %s' "$GREEN" "$RESET" "$label"
         if "$ANIMATED"; then printf '\033[K'; fi
         printf '\n'
@@ -117,12 +119,34 @@ run() {
 }
 
 finish() {
+    local rule item
+    printf -v rule '%*s' 44 ''
+    rule="${rule// /─}"
+    if "$ANIMATED"; then printf '\033[2J\033[H'; fi
+    header "summary"
+    printf '  %s%s%s\n' "$DIM" "$rule" "$RESET"
+    local -a packages=()
+    for item in "${COMPLETED_STEPS[@]}"; do
+        if [[ "$item" =~ ^Installing\ ([^\ ]+)\ · ]]; then
+            packages+=("${BASH_REMATCH[1]}")
+        else
+            printf '  %s✓%s %s\n' "$GREEN" "$RESET" "$item"
+        fi
+    done
+    if ((${#packages[@]})); then
+        printf '  %s✓%s %s packages: %s\n' "$GREEN" "$RESET" "${#packages[@]}" "${packages[*]}"
+    fi
+    printf '  %s%s%s\n\n' "$DIM" "$rule" "$RESET"
     if ((${#FAILED_STEPS[@]})); then
-        printf '\n  %sSetup finished with %s failed step(s):%s\n' "$RED" "${#FAILED_STEPS[@]}" "$RESET" >&2
-        printf '  ✗ %s\n' "${FAILED_STEPS[@]}" >&2
+        printf '  %s✗ %s step(s) failed:%s\n' "$RED" "${#FAILED_STEPS[@]}" "$RESET" >&2
+        for item in "${FAILED_STEPS[@]}"; do
+            printf '    %s✗%s %s\n' "$RED" "$RESET" "$item" >&2
+        done
+        printf '\n  %sLog:%s ~/termux-setup.log\n\n' "$DIM" "$RESET" >&2
         return 1
     fi
-    printf '\n  %s✓%s Setup complete.\n\n' "$GREEN" "$RESET"
+    printf '  %s✓ Setup complete%s\n' "$GREEN" "$RESET"
+    printf '  %sRestart Termux to load fish.%s\n\n' "$DIM" "$RESET"
 }
 
 header() {
@@ -257,7 +281,7 @@ preview() {
     simulate_apps
     run "Fish configured" sleep 0.5
     run "Configuration applied" sleep 0.5
-    printf '\n  %s✓%s Preview complete.\n\n' "$GREEN" "$RESET"
+    finish
 }
 
 case "${1:-}" in
