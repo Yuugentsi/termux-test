@@ -122,7 +122,11 @@ run() {
             elif ((dl_done > 0)); then
                 printf '\r\033[K  %s%s%s %s⇣ %s MB%s | %.*s' "$ACCENT" "${frames[frame % 10]}" "$RESET" "$DIM" "$(mb_text "$dl_done")" "$RESET" "$((width - 26))" "$detail"
             else
-                rendered=$(render_status "$detail" "${frames[frame % 10]}" "$((width - 10))")
+                if [[ -n "$latest" ]]; then
+                    rendered=$(render_status "$detail" "${frames[frame % 10]}" "$((width - 10))")
+                else
+                    rendered="  ${ACCENT}${frames[frame % 10]}${RESET} ${label}"
+                fi
                 elapsed=$((SECONDS - started))
                 printf '\r\033[K%s %s%02d:%02d%s' "$rendered" "$DIM" "$((elapsed / 60))" "$((elapsed % 60))" "$RESET"
             fi
