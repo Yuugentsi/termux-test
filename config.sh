@@ -11,8 +11,6 @@ RED=""
 RESET=""
 FAILED_STEPS=()
 ANIMATED=false
-VERBOSE=false
-for arg in "$@"; do [[ "$arg" == --logs ]] && VERBOSE=true; done
 
 if [[ -t 1 && -z "${NO_COLOR+x}" && "${TERM:-dumb}" != "dumb" ]]; then
     BOLD=$'\e[1m'
@@ -66,16 +64,6 @@ run() {
     ((width > 8)) || width=80
     local -a frames=(⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏)
     shift
-    if "$VERBOSE"; then
-        step "$label"
-        if (set -euo pipefail; "$@"); then
-            printf '  %s✓%s %s\n' "$GREEN" "$RESET" "$label"
-        else
-            printf '  %s✗%s %s\n' "$RED" "$RESET" "$label" >&2
-            FAILED_STEPS+=("$label")
-        fi
-        return 0
-    fi
     log_file=$(mktemp)
     (
         set -euo pipefail
@@ -275,10 +263,10 @@ preview() {
 case "${1:-}" in
     --preview) preview; exit 0 ;;
     --help|-h)
-        printf 'Usage: bash %s [--preview | --logs | --help]\n' "$0"
+        printf 'Usage: bash %s [--preview | --help]\n' "$0"
         exit 0
         ;;
-    --logs|"") ;;
+    "") ;;
     *) printf 'Unknown option: %s\n' "$1" >&2; exit 1 ;;
 esac
 
