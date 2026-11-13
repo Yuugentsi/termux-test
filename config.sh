@@ -77,7 +77,7 @@ mb_text() {
 }
 
 run() {
-    local label="$1" log_file pid frame=0 result=0 detail width rendered content raw latest="" suffix started=$SECONDS
+    local label="$1" log_file pid frame=0 result=0 detail width rendered content raw latest="" suffix started=$SECONDS elapsed
     local dl_total dl_done need_unit need_num
     local rows cols
     read -r rows cols < <(stty size 2>/dev/null) || true
@@ -123,7 +123,8 @@ run() {
                 printf '\r\033[K  %s%s%s %s⇣ %s MB%s | %.*s' "$ACCENT" "${frames[frame % 10]}" "$RESET" "$DIM" "$(mb_text "$dl_done")" "$RESET" "$((width - 26))" "$detail"
             else
                 rendered=$(render_status "$detail" "${frames[frame % 10]}" "$((width - 10))")
-                printf '\r\033[K%s %s%ss%s' "$rendered" "$DIM" "$((SECONDS - started))" "$RESET"
+                elapsed=$((SECONDS - started))
+                printf '\r\033[K%s %s%02d:%02d%s' "$rendered" "$DIM" "$((elapsed / 60))" "$((elapsed % 60))" "$RESET"
             fi
             frame=$((frame + 1))
             sleep 0.08 2>/dev/null || true
