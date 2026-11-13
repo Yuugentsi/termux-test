@@ -303,7 +303,7 @@ printf '  %s02%s  Mirror and updates\n' "$ACCENT" "$RESET"
 printf '  %s03%s  Apply configuration\n' "$ACCENT" "$RESET"
 printf '  %s04%s  Choose apps\n' "$ACCENT" "$RESET"
 printf '  %s05%s  Set up Fish\n' "$ACCENT" "$RESET"
-printf '  %s06%s  Install all download tools\n\n' "$ACCENT" "$RESET"
+printf '  %s06%s  Download tools  %s aria2 · yt-dlp · gallery-dl%s\n\n' "$ACCENT" "$RESET" "$DIM" "$RESET"
 printf '  %s›%s ' "$ACCENT" "$RESET"
 read -r choice
 printf '\n'
